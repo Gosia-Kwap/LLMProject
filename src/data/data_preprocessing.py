@@ -2,19 +2,13 @@ import os
 import pandas as pd
 import unicodedata
 import ftfy
-from transformers import BertTokenizer
 
 
 class TextPreprocessor():
     def __init__(self):
         """
         Initializes the preprocessing class by automatically finding the data path and loading the data.
-        
-        Args:
-            variable (str): The identifier for the dataset, such as a name or type.
         """
-        self._dataframe = None
-
         self._datasetdir = self._find_dataset_dir()
         self._dataframe = self._load_data(self._datasetdir)
 
@@ -57,8 +51,16 @@ class TextPreprocessor():
         """
         columns_to_keep = ['title', 'text', 'bias_rating']
         self._dataframe = self._dataframe[columns_to_keep]
+
+    def _combine_columns(self):
+        self._dataframe['title_text'] = self._dataframe['title'] + ' ' + self._dataframe['text']
+        self._dataframe = self._dataframe[['title_text', 'bias_rating']]
+        self._dataframe['title_text'] = self._dataframe['title_text'].astype(str)
     
     def _check_missing_values(self):
+        """
+        Finds and deletes rows with missing values.
+        """
         missing_values = self._dataframe.isnull().sum()
         if missing_values.sum() == 0:
             print("No missing values found.")
@@ -85,6 +87,9 @@ class TextPreprocessor():
             print("No duplicate rows are found.")
 
     def _find_and_replace_non_ascii(self, columns):
+        """
+        Applies character replacemnt for column/s
+        """
         for column in columns:
             idx, _, sentence_set = self._find_non_ascii(column)
             if len(idx) != 0:
@@ -92,6 +97,9 @@ class TextPreprocessor():
                     self._dataframe.at[idx, column] = self._replace_non_ascii(sentence)
 
     def _replace_non_ascii(self, sentence):
+        '''
+        Replaces non-ASCII characters to valid ones in a specific sentance.
+        '''
         replacements = {
         '“': '"', '”': '"', '″': '"', '’': "'", '‘': "'", '—': '-',
         '─': '-', '–': '-', 'ã': 'a', '‚': ',', '€': 'EUR', '…': '...',
@@ -122,6 +130,10 @@ class TextPreprocessor():
         return indices, non_ascii_chars, sentence_set
     
     def _show_ambiguous_unicode(self, columns):
+        '''
+        If any non-ASCII characters are found, it prints the row index, the character itself,
+        its Unicode code point, and its Unicode name.
+        '''
         for column in columns:
             idxs, non_ascii_chars, _ = self._find_non_ascii(column)
             if len(idxs) != 0:
@@ -139,9 +151,9 @@ class TextPreprocessor():
         return text
     
     def remove_specified_characters_from_dataframe(self):
-        chars_to_remove = ['©', '°', '™', 'ç', '■', '\x9d', '\xad', '\u2009', '蔡', '英', '文', '吳', '釗', '燮', '•', '¿', '\u202f', '►', '\u200c', '✔', 'ø', '️', '¬']
+        chars_to_remove = ['©', '°', '™', 'ç', '■', '\x9d', '\xad', '\u2009', '蔡', '英', '文', '吳', '釗', '燮', '•', '¿', '\u202f', '►', '\u200c', '✔', 'ø', '️', '¬', '•']
         # apply the replacement
-        for column in ['title', 'text']:
+        for column in ['title_text']:
             self._dataframe[column] = self._dataframe[column].apply(lambda x: self.remove_specified_characters(x, chars_to_remove))
 
 
@@ -149,9 +161,7 @@ class TextPreprocessor():
         """
         Corrects garbled or misencoded characters that arise from misinterpreted text encodings
         (for example UTF-8).
-        """
-        # return ftfy.fix_text(text)
-    
+        """    
         # Iterate over the specified columns
         for column in columns:
             for idx, value in self._dataframe[column].items():
@@ -191,7 +201,7 @@ class TextPreprocessor():
         Normalize text by lowercasing, expanding contractions, removing special characters, 
         and removing stop words (if desired).
         """
-        columns=['title', 'text']
+        columns=['title_text']
 
         # ------- Ambiguous Unicode Characters ---------
         # Next steps take care of ambiguous unicode characters
@@ -211,7 +221,7 @@ class TextPreprocessor():
         self._show_ambiguous_unicode(columns)
         # ----------------------------------------------
 
-        # converted to lowercase text
+        # convert to lowercase text
         self._to_lowercase(columns)
 
         # Check for extra whitespaces
@@ -229,6 +239,8 @@ class TextPreprocessor():
         """
         Apply all preprocessing steps to a single data point (title, heading, source, tags, bias_rating).
         """
+        print("Welcome to data preprocessing pipeline!")
+
         # select only title, text and label
         self._extract_columns()
 
@@ -238,14 +250,14 @@ class TextPreprocessor():
         # check for duplicates
         self._check_duplicates()
 
-        # normalize only title and text (ascii characters, lowercase, extra whitespaces)
-        self._normalize_text()
+        # combine "title" and "text" columns
+        self._combine_columns()
 
         # encode bias_rating into a numerical label
         self._encode_labels()
 
-        # 4. NOTE Tokenize the text
-        # 5. NOTE Return processed features (e.g., tokenized text, tags, label)
+        # normalize only title and text (ascii characters, lowercase, extra whitespaces)
+        self._normalize_text()  
 
     def __getitem__(self, index: int):
         """
