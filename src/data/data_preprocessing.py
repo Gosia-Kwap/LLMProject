@@ -49,13 +49,13 @@ class TextPreprocessor():
         This function takes one csv file and returns another csv file
         with selected feature columns
         """
-        columns_to_keep = ['title', 'text', 'bias_rating']
+        columns_to_keep = ['heading', 'text', 'bias_rating']
         self._dataframe = self._dataframe[columns_to_keep]
 
     def _combine_columns(self):
-        self._dataframe['title_text'] = self._dataframe['title'] + ' ' + self._dataframe['text']
-        self._dataframe = self._dataframe[['title_text', 'bias_rating']]
-        self._dataframe['title_text'] = self._dataframe['title_text'].astype(str)
+        self._dataframe['heading_text'] = self._dataframe['heading'] + ' ' + self._dataframe['text']
+        self._dataframe = self._dataframe[['heading_text', 'bias_rating']]
+        self._dataframe['heading_text'] = self._dataframe['heading_text'].astype(str)
     
     def _check_missing_values(self):
         """
@@ -153,7 +153,7 @@ class TextPreprocessor():
     def remove_specified_characters_from_dataframe(self):
         chars_to_remove = ['©', '°', '™', 'ç', '■', '\x9d', '\xad', '\u2009', '蔡', '英', '文', '吳', '釗', '燮', '•', '¿', '\u202f', '►', '\u200c', '✔', 'ø', '️', '¬', '•']
         # apply the replacement
-        for column in ['title_text']:
+        for column in ['heading_text']:
             self._dataframe[column] = self._dataframe[column].apply(lambda x: self.remove_specified_characters(x, chars_to_remove))
 
 
@@ -201,7 +201,7 @@ class TextPreprocessor():
         Normalize text by lowercasing, expanding contractions, removing special characters, 
         and removing stop words (if desired).
         """
-        columns=['title_text']
+        columns=['heading_text']
 
         # ------- Ambiguous Unicode Characters ---------
         # Next steps take care of ambiguous unicode characters
@@ -241,7 +241,7 @@ class TextPreprocessor():
         """
         print("Welcome to data preprocessing pipeline!")
 
-        # select only title, text and label
+        # select only heading, text and label
         self._extract_columns()
 
         # check for missing values
@@ -250,13 +250,13 @@ class TextPreprocessor():
         # check for duplicates
         self._check_duplicates()
 
-        # combine "title" and "text" columns
+        # combine "heading" and "text" columns
         self._combine_columns()
 
         # encode bias_rating into a numerical label
         self._encode_labels()
 
-        # normalize only title and text (ascii characters, lowercase, extra whitespaces)
+        # normalize only heading and text (ascii characters, lowercase, extra whitespaces)
         self._normalize_text()  
 
     def __getitem__(self, index: int):
