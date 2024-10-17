@@ -1,15 +1,13 @@
 import os
 import pandas as pd
-from transformers import BertTokenizer
+from transformers import RobertaTokenizerFast
 
-
-MAX_TOKEN_COUNT = 512
 
 class Tokenizer():
     def __init__(self):
-        # BERT tokenizer is used
-        # https://huggingface.co/google-bert/bert-base-uncased
-        self._tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+        # RobertaTokenizerFast is used
+        # https://huggingface.co/docs/transformers/en/model_doc/roberta#transformers.RobertaTokenizerFast
+        self._tokenizer = RobertaTokenizerFast.from_pretrained('roberta-base')
         self._tokenized_df = None
         self._datasetdir = self._find_dataset_dir()
         self._clean_data = self._load_data(self._datasetdir)
