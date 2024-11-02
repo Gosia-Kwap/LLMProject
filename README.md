@@ -62,3 +62,6 @@ This project uses both fine-tuning and prompt engineering methods for political 
 * Prompt Engineering to guide model outputs for bias detection.
 * LoRA (Low-Rank Adaptation) as a PEFT technique to improve model efficiency during fine-tuning.
 
+# Limitations
+
+ The systems tailored to classifying the political bias might suffer greatly from the lack of reliability or scalability. In particular, our system limitation is the spatially limited source of the data – the political environment of the USA. In the context of USA's politics, the distinction "left" or "right" might take the form of e.g. "pro-democrat" or "pro-republican", which loses scalability for other political contexts, outside of this environment. 
